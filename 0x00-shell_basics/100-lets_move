@@ -1,2 +1,2 @@
 100-lets_move
-mv [[:upper:]] /tmp/u
+mv [[:upper:]]* /tmp/u
