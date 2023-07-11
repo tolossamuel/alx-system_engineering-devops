@@ -1,0 +1,1 @@
+this is readme about shell variables expansions. learn from alx
