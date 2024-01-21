@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Bash script to connect to a server using a private key with ssh
+# Bash script to connect to the server using a private key with ssh
 
 # Server IP address
 server_ip="8.8.8.8"
