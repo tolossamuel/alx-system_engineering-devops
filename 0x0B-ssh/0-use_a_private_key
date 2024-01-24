@@ -1,9 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# connect server to pc using private key
 
-# Bash script to connect to the server using a private key with ssh
-
-# Server IP address
-server_ip="8.8.8.8"
-
-# SSH command using the private key (~/.ssh/school) and the user (ubuntu)
-ssh -i ~/.ssh/school ubuntu@$server_ip
+ssh -i ~/.ssh/school ubuntu@54.174.244.45
