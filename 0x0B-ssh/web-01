@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# bash scribts
+# ky ~/.ssh/school with the user ubuntu
+ssh ubuntu@18.233.64.65 -i ~/.ssh/id_rsa
