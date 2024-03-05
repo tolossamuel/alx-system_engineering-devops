@@ -1,55 +1,114 @@
 #!/usr/bin/python3
-"""Function to count words in all hot posts of a given Reddit subreddit."""
+"""
+    Query the Reddit API,
+    parses the title of all hot articles,
+    and prints a sorted count of given keywords
+"""
+
 import requests
 
+def count_word_title(title, i, len_t, dict_words_unique):
+    """Store repeating string in hash table"""
+    if i >= len_t:
+        return None
 
-def count_words(subreddit, word_list, instances={}, after="", count=0):
-    """Prints counts of given words found in hot posts of a given subreddit.
+    if title[i] in dict_words_unique:
+        dict_words_unique[title[i]] += 1
 
-    Args:
-        subreddit (str): The subreddit to search.
-        word_list (list): The list of words to search for in post titles.
-        instances (obj): Key/value pairs of words/counts.
-        after (str): The parameter for the next page of the API results.
-        count (int): The parameter of results matched thus far.
-    """
-    url = "https://www.reddit.com/r/{}/hot/.json".format(subreddit)
-    headers = {
-        "User-Agent": "linux:0x16.api.advanced:v1.0.0 (by /u/bdov_)"
-    }
-    params = {
-        "after": after,
-        "count": count,
-        "limit": 100
-    }
-    response = requests.get(url, headers=headers, params=params,
-                            allow_redirects=False)
-    try:
-        results = response.json()
-        if response.status_code == 404:
-            raise Exception
-    except Exception:
-        print("")
+    count_word_title(title, i + 1, len_t, dict_words_unique)
+
+    return None
+
+def convert_lower(w, i, len_w):
+    """Convert strings to lowercase"""
+    if i >= len_w:
+        return None
+
+    w[i] = w[i].lower()
+    convert_lower(w, i + 1, len_w)
+
+    return None
+
+
+
+def store_title_word_hash(list_title, i, len_l, dict_words_unique):
+    """Run trough a list of hot titles"""
+    if i >= len_l:
+        return None
+
+    title = list_title[i]["data"]["title"].lower().split(" ")
+
+    count_word_title(title, 0, len(title), dict_words_unique)
+
+    store_title_word_hash(list_title, i + 1, len_l, dict_words_unique)
+
+    return None
+
+
+def print_words(w, i, len_wn, dict_words_repeated):
+    """Print the repeated strings"""
+    if i >= len_wn:
+        return None
+
+    if w[i][1] > 0:
+        print("{}: {}".format(w[i][0], dict_words_repeated[w[i][0]] * w[i][1]))
+
+    print_words(w, i + 1, len_wn, dict_words_repeated)
+
+    return None
+
+def store_given_word_hash(w, i, len_w, dict_words, type_d):
+    """store given words in hash tables"""
+    if i >= len_w:
+        return None
+    if type_d == "r":
+        if w[i] in dict_words:
+            dict_words[w[i]] += 1
+        else:
+            dict_words[w[i]] = 1
+    elif type_d == "u":
+        dict_words[w[i]] = 0
+
+    store_given_word_hash(w, i + 1, len_w, dict_words, type_d)
+
+    return None
+
+def count_words(subreddit, word_list):
+    """Count the number of time a word in word_list is name
+    in the hot articles subrredt"""
+    convert_lower(word_list, 0, len(word_list))
+
+    words_repeated = {}
+    store_given_word_hash(word_list, 0, len(word_list), words_repeated, "r")
+
+    words_unique = {}
+    store_given_word_hash(word_list, 0, len(word_list), words_unique, "u")
+
+    words_filled = get_all_hot_articles(subreddit, word_list, words_unique)
+    if not words_filled:
         return
 
-    results = results.get("data")
-    after = results.get("after")
-    count += results.get("dist")
-    for c in results.get("children"):
-        title = c.get("data").get("title").lower().split()
-        for word in word_list:
-            if word.lower() in title:
-                times = len([t for t in title if t == word.lower()])
-                if instances.get(word) is None:
-                    instances[word] = times
-                else:
-                    instances[word] += times
+    sort_words = sorted(words_filled.items(), key=lambda t: t[::-1])
+    sort_des_words = sorted(sort_words, key=lambda tup: tup[1], reverse=True)
 
+    print_words(sort_des_words, 0, len(sort_des_words), words_repeated)
+
+def get_all_hot_articles(subreddit, word_list, dict_words_unique, after=""):
+    """Get the all articles"""
     if after is None:
-        if len(instances) == 0:
-            print("")
-            return
-        instances = sorted(instances.items(), key=lambda kv: (-kv[1], kv[0]))
-        [print("{}: {}".format(k, v)) for k, v in instances]
-    else:
-        count_words(subreddit, word_list, instances, after, count)
+        return dict_words_unique
+    url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
+    url += "?limit=100&after={}".format(after)
+    headers_m = {'User-agent': 'botsito'}
+    redirect = False
+
+    r = requests.get(url, allow_redirects=redirect, headers=headers_m)
+    if r.status_code != 200:
+        return None
+
+    articles = r.json().get("data").get("children")
+
+    store_title_word_hash(articles, 0, len(articles), dict_words_unique)
+
+    after = r.json().get("data").get("after")
+    return get_all_hot_articles(subreddit, word_list, dict_words_unique, after)
