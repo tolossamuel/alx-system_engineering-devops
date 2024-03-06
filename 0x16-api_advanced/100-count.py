@@ -29,8 +29,6 @@ def convert_lower(w, i, len_w):
 
     return None
 
-
-
 def store_title_word_hash(list_title, i, len_l, dict_words_unique):
     """Run trough a list of hot titles"""
     if i >= len_l:
